@@ -8,27 +8,32 @@ use App\Models\User;
 use Firebase\JWT\JWT;
 use Firebase\JWT\ExpiredException;
 
-class JwtMiddleware
-{
-    public function handle($request, Closure $next, $guard = null)
-    {
-        $token = $request->input('token');
+class JwtMiddleware {
+    public function handle($request, Closure $next, $guard = null) {
+        $token = $request->bearerToken();
         
         if(!$token) {
-            // Unauthorized response if token not there
-            return response()->json([
-                'error' => 'Token not provided.'
-            ], 401);
+            // Unauthorized request if token isn't provided
+            return response()->json(
+                ['error' => 'Unauthorized'], 401
+            );
         }
 
+        try {
+            $credentials = JWT::decode($token, env('JWT_LOGIN'), ['HS256']);
+        } catch(ExpiredExpection $e) {
+            return response()->json(
+                ['error' => 'token is expired'], 408   
+            );
+        } catch(Expection $e) {
+            return response()->json(
+                ['error' => 'error decoding token'], 500
+            );
+        }
         
-        $credentials = JWT::decode($token, env('JWT_SECRET'), ['HS256']);
-    
+        // find the user and store it in a request instance for later use.
 
-        $user = User::find($credentials->sub);
-
-        // Now let's put the user in the request class so that you can grab it from there
-        $request->auth = $user;
+        $request->auth = User::find($credentials->sub);
 
         return $next($request);
     }

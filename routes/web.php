@@ -18,17 +18,29 @@ $router->get('/', function () use ($router) {
 });
 
 $router->group(['prefix' => 'training'], function () use ($router) {
-    // Matches "/training/signup
-    $router->post('signup', 'UserController@signUp');
+    $router->post('signup', 'AuthController@signUp');
     $router->post('login', 'AuthController@authenticate');
- 
+    $router->get('verification', 'AuthController@verify');
+    $router->post('forget-password', 'AuthController@forgetPassword');
+    $router->post('reset-password','AuthController@resetPassword');
+    $router->post('email-request','AuthController@emailRequest');
 });
 
- $router->group(['prefix' => 'training/registered', 'middleware' => 'jwt.auth'],  function() use ($router) {
+ $router->group(['prefix' => 'training/auth', 'middleware' => 'jwt.auth'],  function() use ($router) {
+        $router->get('users', 'FeatureController@allUsers');
+        $router->get('user', 'FeatureController@singleUser');
+        $router->post('delete', 'FeatureController@delete');
+        $router->post('new-user', 'FeatureController@createUser');
+        $router->post('change-password', 'FeatureController@changePassword'); 
+});
 
-        $router->post('users', 'featureController@allUsers');
-        $router->post('user/{id}', 'featureController@singleUser');
-        $router->post('update/{id}', 'featureController@update');
-        $router->post('delete/{id}', 'featureController@delete');
-    }
-);
+$router->group(['prefix' => 'training/auth', 'middleware' => 'jwt.auth'],  function() use ($router) {
+    // $router->get('user', 'featureController@singleUser');
+    $router->post('delete-task', 'TaskController@deleteTask');
+    $router->post('create-task', 'TaskController@createTask');
+    $router->post('update-task', 'TaskController@updateTask');
+    $router->post('update-task-status', 'TaskController@updateTaskStatus');
+    $router->get('user-tasks', 'TaskController@userTasks');
+    $router->get('today-tasks', 'TaskController@todayTasks');
+    $router->get('all-tasks', 'TaskController@allTasks');
+});
